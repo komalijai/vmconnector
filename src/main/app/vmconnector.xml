@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/>
+    <vm:connector name="VMconnector" validateConnections="true" doc:name="VM"/>
+    <flow name="vmconnectorFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/vmconnector" doc:name="HTTP"/>
+        <logger message="the flow starts............." level="INFO" doc:name="Logger"/>
+        <set-variable variableName="fvjob" value="#[message.inboundProperties.'http.query.params'.fvjob]" doc:name="Variable"/>
+        <set-session-variable variableName="svlocation" value="#[message.inboundProperties.'http.query.params'.svlocation]" doc:name="Session Variable"/>
+        <vm:outbound-endpoint exchange-pattern="request-response" path="processQ" connector-ref="VMconnector" doc:name="VM"/>
+        <logger message="vm config final response... #[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="vmconnectorFlow1">
+        <vm:inbound-endpoint exchange-pattern="request-response" path="processQ" connector-ref="VMconnector" doc:name="VM"/>
+        <set-payload value="{ &quot;job&quot;: #[flowVars.fvjob], &quot;location&quot; :#[sessionVars.svlocation] }" doc:name="Set Payload"/>
+        <logger message="final response.............. #[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>
